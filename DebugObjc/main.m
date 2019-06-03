@@ -7,6 +7,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import <objc/runtime.h>
+
 @protocol FakeProtocol <NSObject>
 - (void)fakeMethod;
 @end
@@ -16,9 +18,14 @@
 @end
 @implementation FakeObj
 - (void)fakeMethod {
-//  NSLog(@"^^^ calling fake Method");
+  //  NSLog(@"^^^ calling fake Method");
 }
+
 @end
+
+void fakeMethodx() {
+  printf("fakeMethodx");
+}
 
 int main(int argc, const char * argv[]) {
   @autoreleasepool {
@@ -33,6 +40,16 @@ int main(int argc, const char * argv[]) {
           [(id<FakeProtocol>)_fakeObj fakeMethod];
         }
       });
+    }
+
+    SEL selector = sel_registerName("fakeMethodx");
+    IMP imp = fakeMethodx;
+    if (sel_isMapped(selector)) {
+      class_addMethod([FakeObj class], selector, imp, nil);
+      FakeObj *f = [FakeObj new];
+      [f performSelector:selector];
+    } else {
+      NSLog(@"!! not sel_isMapped");
     }
   }
   sleep(4);
